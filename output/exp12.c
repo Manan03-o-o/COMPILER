@@ -232,3 +232,33 @@ C[k].items[b].dot && J.items[a].la == C[k].items[b].la) { found=1; break; }
                 } 
                 if (exists == -1) { C[C_count++] = J; changed = 1; } 
             }
+                   } 
+    } 
+} 
+ 
+// We'll merge states with same core to form LALR: map LR1 states -> LALR state index 
+int lr1_to_lalr[MAX_STATES]; 
+ItemSet lalr_states[MAX_STATES]; 
+int lalr_count = 0; 
+ 
+void build_LALR_from_LR1() { 
+    memset(lr1_to_lalr, -1, sizeof(lr1_to_lalr)); 
+    lalr_count = 0; 
+    for (int i = 0; i < C_count; ++i) { 
+        if (lr1_to_lalr[i] != -1) continue; 
+        // create new LALR state with core = C[i] core 
+        lalr_states[lalr_count] = C[i]; 
+        lr1_to_lalr[i] = lalr_count; 
+        // merge lookaheads from other LR(1) states with equal core 
+        for (int j = i+1; j < C_count; ++j) { 
+            if (items_equal_core(&C[i], &C[j])) { 
+                // add items from C[j] whose (p,dot) not already present 
+                for (int a = 0; a < C[j].n; ++a) { 
+                    Item it = C[j].items[a]; 
+                    int found = 0; 
+                    for (int b = 0; b < lalr_states[lalr_count].n; ++b) 
+                        if (lalr_states[lalr_count].items[b].p == it.p && 
+lalr_states[lalr_count].items[b].dot == it.dot && lalr_states[lalr_count].items[b].la == it.la) { 
+found=1; break; } 
+                    if (!found) lalr_states[lalr_count].items[lalr_states[lalr_count].n++] = it; 
+                }
