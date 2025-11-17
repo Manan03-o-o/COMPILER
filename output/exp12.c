@@ -172,3 +172,63 @@ void itemset_print(const ItemSet *I) {
         } 
         if (it.dot == p->rhs_len) printf(" . "); 
         printf(", la=%s\n", symbols[it.la]);
+            } 
+} 
+ 
+int goto_on(const ItemSet *I, int X, ItemSet *J) { 
+    J->n = 0; 
+    for (int i = 0; i < I->n; ++i) { 
+        Item it = I->items[i]; 
+        Prod *p = &prods[it.p]; 
+        if (it.dot < p->rhs_len && p->rhs[it.dot] == X) { 
+            Item nit = it; nit.dot++; 
+            // add nit 
+            if (!contains_item(J, nit)) J->items[J->n++] = nit; 
+        } 
+    } 
+    if (J->n == 0) return 0; 
+    closure(J); 
+    return 1; 
+} 
+ 
+// State merging: find state with same core 
+int find_core_equal_state(const ItemSet *s) { 
+    for (int i = 0; i < C_count; ++i) if (items_equal_core(&C[i], s)) return i; 
+    return -1; 
+} 
+ 
+// Build canonical LR(1) collection and then merge cores to LALR 
+ 
+void build_LR1() { 
+    // initial item: augmented production is prods[0] 
+    C_count = 0;
+       ItemSet I0; I0.n = 0; 
+    // production 0 should be S'->S 
+    Item it0 = {0, 0, get_sym_index("$")}; // $ as lookahead 
+    I0.items[I0.n++] = it0; 
+    closure(&I0); 
+    C[C_count++] = I0; 
+    int changed = 1; 
+    while (changed) { 
+        changed = 0; 
+        for (int i = 0; i < C_count; ++i) { 
+            // for all grammar symbols 
+            for (int X = 0; X < sym_count; ++X) { 
+                ItemSet J; if (!goto_on(&C[i], X, &J)) continue; 
+                // check if J exists 
+                int exists = -1; 
+                for (int k = 0; k < C_count; ++k) { 
+                    if (C[k].n == J.n) { 
+                        int all = 1; 
+                        for (int a = 0; a < J.n; ++a) { 
+                            int found = 0; 
+                            for (int b = 0; b < C[k].n; ++b) 
+                                if (J.items[a].p == C[k].items[b].p && J.items[a].dot == 
+C[k].items[b].dot && J.items[a].la == C[k].items[b].la) { found=1; break; } 
+                            if (!found) { all=0; break; } 
+                        } 
+                        if (all) { exists = k; break; } 
+                    } 
+                } 
+                if (exists == -1) { C[C_count++] = J; changed = 1; } 
+            }
