@@ -322,3 +322,63 @@ J.items[aa].dot==C[m].items[bb].dot && J.items[aa].la==C[m].items[bb].la) { f=1;
                 // item A->alpha . , for each lookahead la in items -> reduce 
                 if (it.p == 0) { 
                     // augmented production S'->S . , la should be $
+                         ACTION[s][it.la].action = 3; ACTION[s][it.la].number = 0; // accept 
+                } else { 
+                    for (int li = 0; li < I->n; ++li) { 
+                        // reduce for each lookahead where p and dot match 
+                    } 
+                    // Actually add reduce for this item's lookahead 
+                    ACTION[s][it.la].action = 2; ACTION[s][it.la].number = it.p; // reduce by 
+production p 
+                } 
+            } 
+        } 
+    } 
+} 
+ 
+// Helper to find symbol index by string safely 
+int find_sym(const char *s) { 
+    for (int i = 0; i < sym_count; ++i) if (strcmp(symbols[i], s) == 0) return i; 
+    return -1; 
+} 
+ 
+// Parse input tokens (space separated terminals) ending with $ 
+void parse_input() { 
+    printf("Enter input tokens separated by spaces (terminals). Use 'id' or token names. End 
+with $ or include it):\n"); 
+    char line[1024]; 
+    if (!fgets(line, sizeof(line), stdin)) return; 
+    char *tok = strtok(line, " \t\n"); 
+    int input[500]; int in_n = 0; 
+    while (tok) { 
+        int si = find_sym(tok);
+           if (si == -1) { 
+            printf("Unknown token '%s'\n", tok); return; } 
+        input[in_n++] = si; 
+        tok = strtok(NULL, " \t\n"); 
+    } 
+    if (in_n == 0 || symbols[input[in_n-1]][0] != '$') { 
+        // add $ 
+        int si = find_sym("$"); if (si == -1) si = get_sym_index("$"); input[in_n++] = si; 
+    } 
+    // stacks 
+    int state_stack[1000]; int state_top = 0; state_stack[state_top++] = 0; 
+    int sym_stack[1000]; int sym_top = 0; sym_stack[sym_top++] = find_sym("$"); 
+    int ip = 0; 
+ 
+    while (1) { 
+        int s = state_stack[state_top-1]; 
+        int a = input[ip]; 
+        Action act = ACTION[s][a]; 
+        if (act.action == 1) { 
+            // shift 
+            state_stack[state_top++] = act.number; 
+            sym_stack[sym_top++] = a; 
+            ip++; 
+            printf("shift to state %d, token %s\n", act.number, symbols[a]); 
+        } else if (act.action == 2) { 
+            // reduce by prod r 
+            int r = act.number; Prod *p = &prods[r]; 
+            for (int i = 0; i < p->rhs_len; ++i) { state_top--; sym_top--; } 
+            int t = state_stack[state_top-1]; 
+            printf("reduce by %s ->", symbols[p->lhs]); 
