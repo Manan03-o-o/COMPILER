@@ -82,3 +82,63 @@ void compute_first() {
     for (int i = 0; i < sym_count; ++i) { FIRST_count[i]=0; FIRST_epsilon[i]=0; } 
     // terminals: FIRST(a) = {a} 
     for (int i = 0; i < sym_count; ++i) if (is_terminal[i]) add_first(i, i);
+      int changed = 1; 
+    while (changed) { 
+        changed = 0; 
+        for (int pi = 0; pi < prod_count; ++pi) { 
+            Prod *p = &prods[pi]; 
+            int A = p->lhs; 
+            int can_eps = 1; 
+            for (int k = 0; k < p->rhs_len; ++k) { 
+                int B = p->rhs[k]; 
+                // add FIRST(B) \ {epsilon} to FIRST(A) 
+                for (int j = 0; j < FIRST_count[B]; ++j) { 
+                    int t = FIRST[B][j]; 
+                    if (t == -1) continue; 
+                    int before = FIRST_count[A]; 
+                    add_first(A, t); 
+                    if (FIRST_count[A] != before) changed = 1; 
+                } 
+                if (!FIRST_epsilon[B]) { can_eps = 0; break; } 
+            } 
+            if (can_eps && !FIRST_epsilon[A]) { FIRST_epsilon[A]=1; changed=1; } 
+        } 
+    } 
+} 
+ 
+// FIRST sequence: for sequence X1 X2 ... compute FIRST 
+void first_of_sequence(int seq[], int len, int out[], int *outn) { 
+    *outn = 0; 
+    int can_eps = 1; 
+    for (int i = 0; i < len; ++i) { 
+        int X = seq[i]; 
+    for (int j = 0; j < FIRST_count[X]; ++j) { 
+            int t = FIRST[X][j]; 
+            if (t == -1) continue; 
+            int exists = 0; 
+            for (int k = 0; k < *outn; ++k) if (out[k] == t) { exists = 1; break; } 
+            if (!exists) out[(*outn)++] = t; 
+        } 
+        if (!FIRST_epsilon[X]) { can_eps = 0; break; } 
+    } 
+    if (can_eps) { /* add epsilon if needed: represented by -1 */ 
+        int exists = 0; for (int k=0;k<*outn;++k) if (out[k]==-1) exists=1; 
+        if (!exists) out[(*outn)++] = -1; 
+    } 
+} 
+ 
+// Closure and goto 
+ 
+void closure(ItemSet *I) { 
+    int changed = 1; 
+    while (changed) { 
+        changed = 0; 
+        for (int i = 0; i < I->n; ++i) { 
+            Item it = I->items[i]; 
+            Prod *p = &prods[it.p]; 
+            if (it.dot < p->rhs_len) { 
+                int B = p->rhs[it.dot]; 
+                if (!is_terminal[B]) { 
+                    // compute lookahead set: beta a 
+                    int beta[MAX_RHS]; int bl = 0; 
+                    for (int k = it.dot+1; k < p->rhs_len; ++k) beta[bl++]=p->rhs[k];
