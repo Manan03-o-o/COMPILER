@@ -262,3 +262,63 @@ lalr_states[lalr_count].items[b].dot == it.dot && lalr_states[lalr_count].items[
 found=1; break; } 
                     if (!found) lalr_states[lalr_count].items[lalr_states[lalr_count].n++] = it; 
                 }
+                   lr1_to_lalr[j] = lalr_count; 
+            } 
+        } 
+        lalr_count++; 
+    } 
+} 
+ 
+// Parsing table: ACTION and GOTO 
+// ACTION: for terminals and $, use encoding: shift s to state, reduce by prod r, accept, or 
+error 
+typedef struct { int action; int number; } Action; // action: 0=error,1=shift,2=reduce,3=accept 
+ 
+Action ACTION[MAX_STATES][MAX_SYMBOLS]; 
+int GOTO[MAX_STATES][MAX_SYMBOLS]; 
+ 
+void build_parsing_table() { 
+    // initialize 
+    for (int i = 0; i < lalr_count; ++i) for (int j = 0; j < sym_count; ++j) { ACTION[i][j].action 
+= 0; ACTION[i][j].number = -1; GOTO[i][j] = -1; } 
+    // for each LALR state, for each item 
+    for (int s = 0; s < lalr_count; ++s) { 
+        ItemSet *I = &lalr_states[s]; 
+        // shifts and gotos: for items A->alpha . X beta, goto on X to t 
+        for (int a = 0; a < I->n; ++a) { 
+            Item it = I->items[a]; Prod *p = &prods[it.p]; 
+            if (it.dot < p->rhs_len) { 
+                int X = p->rhs[it.dot]; 
+                // find LR1 goto from any LR1 state mapped to s 
+                // We'll search in original LR(1) collection for state k mapped to s, compute 
+goto_on(C[k], X) to J, find which LR1 state index matches J
+   for (int k = 0; k < C_count; ++k) if (lr1_to_lalr[k] == s) { 
+                    ItemSet J; if (!goto_on(&C[k], X, &J)) continue; 
+                    // find index of J in C (exact match) 
+                    int idx = -1; 
+                    for (int m = 0; m < C_count; ++m) { 
+                        if (C[m].n == J.n) { 
+                            int all=1; 
+                            for (int aa=0; aa<J.n; ++aa) { 
+                                int f=0; 
+                                for (int bb=0; bb<C[m].n; ++bb) 
+                                    if (J.items[aa].p==C[m].items[bb].p && 
+J.items[aa].dot==C[m].items[bb].dot && J.items[aa].la==C[m].items[bb].la) { f=1; break; } 
+                                if (!f) { all=0; break; } 
+                            } 
+                            if (all) { idx = m; break; } 
+                        } 
+                    } 
+                    if (idx != -1) { 
+                        int t = lr1_to_lalr[idx]; 
+                        if (is_terminal[X]) { 
+                            ACTION[s][X].action = 1; ACTION[s][X].number = t; // shift 
+                        } else { 
+                            GOTO[s][X] = t; 
+                        } 
+                    } 
+                } 
+            } else { 
+                // item A->alpha . , for each lookahead la in items -> reduce 
+                if (it.p == 0) { 
+                    // augmented production S'->S . , la should be $
