@@ -240,3 +240,33 @@ void add_symbol(char *arr,char ch)
     int i,flag=0; 
     for(i=0;arr[i]!='\0';i++) 
     {
+         if(ch==arr[i]) 
+        { 
+            flag=1; 
+            break; 
+        } 
+    } 
+    if(flag==0) 
+    { 
+        arr[count++]=ch; 
+        arr[count]='\0'; 
+    } 
+} 
+ 
+int CREATE_LL1_TABLE() 
+{ 
+    int i,j,k,fl,pos,flag=0; 
+    char arr[100]; 
+    for(i=0;i<cr;i++) 
+    { 
+        arr[0]='\0'; 
+        count=0; 
+        FIND_FIRST(arr,G[i][3]); 
+        for(j=0;j<count;j++) 
+        { 
+            if(arr[j]=='!') 
+            { 
+                FIND_FOLLOW(arr,G[i][0]); 
+                break; 
+            } 
+        }
