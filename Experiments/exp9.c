@@ -270,3 +270,37 @@ int CREATE_LL1_TABLE()
                 break; 
             } 
         }
+          for(k=0;k<nt;k++) 
+        { 
+            if(NT[k]==G[i][0]) 
+            { 
+                pos=k; 
+                break; 
+            } 
+        } 
+        for(j=0;j<count;j++) 
+        { 
+            if(arr[j]!='!') 
+            { 
+                for(k=0;k<t;k++) 
+                { 
+                    if(arr[j]==T[k]) 
+                    { 
+                        if(LL1[pos][k]>0) 
+                        { 
+                            printf("\n\nConflict occur between %s and %s rules!",G[LL1[pos][k]
+1],G[i]); 
+                            printf("\nGiven grammar is not LL(1) grammar!\n"); 
+                            flag=1; 
+                            return flag; 
+                        } 
+                        else 
+                            LL1[pos][k]=i+1; 
+                        break; 
+                    } 
+                } 
+            }
+               } 
+    } 
+    return flag; 
+}
