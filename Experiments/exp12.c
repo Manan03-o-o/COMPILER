@@ -27,3 +27,34 @@ int get_sym_index(const char *s) {
 } 
  
 // Production structure
+typedef struct { int lhs; int rhs[MAX_RHS]; int rhs_len; } Prod; 
+Prod prods[MAX_PROD]; 
+int prod_count = 0; 
+ 
+// Augmented grammar: S'->S 
+int start_symbol = -1; 
+ 
+// LR(1) item: production index, dot position, lookahead symbol 
+typedef struct { int p; int dot; int la; } Item; 
+ 
+// Item set 
+typedef struct { 
+    Item items[MAX_ITEMS]; 
+    int n; 
+} ItemSet; 
+ 
+ItemSet C[MAX_STATES]; 
+int C_count = 0; 
+ 
+// Helpers 
+int contains_item(const ItemSet *s, Item it) { 
+    for (int i = 0; i < s->n; ++i) 
+        if (s->items[i].p == it.p && s->items[i].dot == it.dot && s->items[i].la == it.la) return 1; 
+    return 0; 
+} 
+ 
+int items_equal_core(const ItemSet *a, const ItemSet *b) { 
+    // cores equal if p and dot equal for every item disregarding lookahead, and sizes match 
+    // We'll check that every core item in a exists in b and vice versa 
+    for (int i = 0; i < a->n; ++i) {
+        
