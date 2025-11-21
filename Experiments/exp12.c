@@ -206,3 +206,63 @@ int find_core_equal_state(const ItemSet *s) {
 void build_LR1() { 
     // initial item: augmented production is prods[0] 
     C_count = 0;
+     ItemSet I0; I0.n = 0; 
+    // production 0 should be S'->S 
+    Item it0 = {0, 0, get_sym_index("$")}; // $ as lookahead 
+    I0.items[I0.n++] = it0; 
+    closure(&I0); 
+    C[C_count++] = I0; 
+    int changed = 1; 
+    while (changed) { 
+        changed = 0; 
+        for (int i = 0; i < C_count; ++i) { 
+            // for all grammar symbols 
+            for (int X = 0; X < sym_count; ++X) { 
+                ItemSet J; if (!goto_on(&C[i], X, &J)) continue; 
+                // check if J exists 
+                int exists = -1; 
+                for (int k = 0; k < C_count; ++k) { 
+                    if (C[k].n == J.n) { 
+                        int all = 1; 
+                        for (int a = 0; a < J.n; ++a) { 
+                            int found = 0; 
+                            for (int b = 0; b < C[k].n; ++b) 
+                                if (J.items[a].p == C[k].items[b].p && J.items[a].dot == 
+C[k].items[b].dot && J.items[a].la == C[k].items[b].la) { found=1; break; } 
+                            if (!found) { all=0; break; } 
+                        } 
+                        if (all) { exists = k; break; } 
+                    } 
+                } 
+                if (exists == -1) { C[C_count++] = J; changed = 1; } 
+            }
+                 } 
+    } 
+} 
+ 
+// We'll merge states with same core to form LALR: map LR1 states -> LALR state index 
+int lr1_to_lalr[MAX_STATES]; 
+ItemSet lalr_states[MAX_STATES]; 
+int lalr_count = 0; 
+ 
+void build_LALR_from_LR1() { 
+    memset(lr1_to_lalr, -1, sizeof(lr1_to_lalr)); 
+    lalr_count = 0; 
+    for (int i = 0; i < C_count; ++i) { 
+        if (lr1_to_lalr[i] != -1) continue; 
+        // create new LALR state with core = C[i] core 
+        lalr_states[lalr_count] = C[i]; 
+        lr1_to_lalr[i] = lalr_count; 
+        // merge lookaheads from other LR(1) states with equal core 
+        for (int j = i+1; j < C_count; ++j) { 
+            if (items_equal_core(&C[i], &C[j])) { 
+                // add items from C[j] whose (p,dot) not already present 
+                for (int a = 0; a < C[j].n; ++a) { 
+                    Item it = C[j].items[a]; 
+                    int found = 0; 
+                    for (int b = 0; b < lalr_states[lalr_count].n; ++b) 
+                        if (lalr_states[lalr_count].items[b].p == it.p && 
+lalr_states[lalr_count].items[b].dot == it.dot && lalr_states[lalr_count].items[b].la == it.la) { 
+found=1; break; } 
+                    if (!found) lalr_states[lalr_count].items[lalr_states[lalr_count].n++] = it; 
+                }
