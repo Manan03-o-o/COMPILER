@@ -116,3 +116,63 @@ void first_of_sequence(int seq[], int len, int out[], int *outn) {
     int can_eps = 1; 
     for (int i = 0; i < len; ++i) { 
         int X = seq[i];
+        for (int j = 0; j < FIRST_count[X]; ++j) { 
+            int t = FIRST[X][j]; 
+            if (t == -1) continue; 
+            int exists = 0; 
+            for (int k = 0; k < *outn; ++k) if (out[k] == t) { exists = 1; break; } 
+            if (!exists) out[(*outn)++] = t; 
+        } 
+        if (!FIRST_epsilon[X]) { can_eps = 0; break; } 
+    } 
+    if (can_eps) { /* add epsilon if needed: represented by -1 */ 
+        int exists = 0; for (int k=0;k<*outn;++k) if (out[k]==-1) exists=1; 
+        if (!exists) out[(*outn)++] = -1; 
+    } 
+} 
+ 
+// Closure and goto 
+ 
+void closure(ItemSet *I) { 
+    int changed = 1; 
+    while (changed) { 
+        changed = 0; 
+        for (int i = 0; i < I->n; ++i) { 
+            Item it = I->items[i]; 
+            Prod *p = &prods[it.p]; 
+            if (it.dot < p->rhs_len) { 
+                int B = p->rhs[it.dot]; 
+                if (!is_terminal[B]) { 
+                    // compute lookahead set: beta a 
+                    int beta[MAX_RHS]; int bl = 0; 
+                    for (int k = it.dot+1; k < p->rhs_len; ++k) beta[bl++]=p->rhs[k]; 
+   beta[bl++] = it.la; 
+                    int la_set[MAX_FIRST]; int lan=0; 
+                    first_of_sequence(beta, bl, la_set, &lan); 
+                    for (int prod_j = 0; prod_j < prod_count; ++prod_j) { 
+                        if (prods[prod_j].lhs == B) { 
+                            for (int li = 0; li < lan; ++li) { 
+                                int la = la_set[li]; if (la == -1) continue; // epsilon as lookahead not useful 
+                                Item newit; newit.p = prod_j; newit.dot = 0; newit.la = la; 
+                                if (!contains_item(I, newit)) { I->items[I->n++] = newit; changed = 1; } 
+                            } 
+                        } 
+                    } 
+                } 
+            } 
+        } 
+    } 
+} 
+ 
+void itemset_print(const ItemSet *I) { 
+    printf("Items (n=%d):\n", I->n); 
+    for (int i = 0; i < I->n; ++i) { 
+        Item it = I->items[i]; 
+        Prod *p = &prods[it.p]; 
+        printf("  (%d) %s -> ", it.p, symbols[p->lhs]); 
+        for (int k = 0; k < p->rhs_len; ++k) { 
+            if (k == it.dot) printf(" . "); 
+            printf("%s ", symbols[p->rhs[k]]); 
+        } 
+        if (it.dot == p->rhs_len) printf(" . "); 
+        printf(", la=%s\n", symbols[it.la]);
