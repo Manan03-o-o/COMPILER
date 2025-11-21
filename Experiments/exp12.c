@@ -416,3 +416,63 @@ void load_grammar() {
             "T->F", 
             "F->( E )", 
             "F->id",
+              NULL 
+        }; 
+        prod_count = 0; 
+        for (int i = 0; lines[i]; ++i) { 
+            char buf[256]; strcpy(buf, lines[i]); 
+            char *arrow = strstr(buf, "->"); 
+            if (!arrow) continue; 
+            *arrow = '\0'; 
+            char *lhs = buf; char *rhs = arrow+2; 
+            while (isspace(*lhs)) lhs++; char *end = lhs+strlen(lhs)-1; while (end>lhs && 
+isspace(*end)) *end--='\0'; 
+            while (isspace(*rhs)) rhs++; end = rhs+strlen(rhs)-1; while (end>rhs && 
+isspace(*end)) *end--='\0'; 
+            int L = get_sym_index(lhs); 
+            // tokenize rhs 
+            char *tk = strtok(rhs, " "); 
+            prods[prod_count].lhs = L; prods[prod_count].rhs_len = 0; 
+            while (tk) { 
+                int si = get_sym_index(tk); 
+                prods[prod_count].rhs[prods[prod_count].rhs_len++] = si; 
+                tk = strtok(NULL, " "); 
+            } 
+            prod_count++; 
+        } 
+    } else { 
+        char line[256]; 
+        prod_count = 0; 
+        while (fgets(line, sizeof(line), f)) { 
+            char *s = line; while (isspace(*s)) s++; if (*s=='\0' || *s=='#') continue; 
+            char *arrow = strstr(s, "->"); if (!arrow) continue; *arrow='\0'; 
+  char *lhs = s; char *rhs = arrow+2; char *end = lhs+strlen(lhs)-1; while (end>lhs && 
+isspace(*end)) *end--='\0'; 
+            end = rhs+strlen(rhs)-1; while (end>rhs && isspace(*end)) *end--='\0'; 
+            int L = get_sym_index(lhs); 
+            prods[prod_count].lhs = L; prods[prod_count].rhs_len = 0; 
+            char *tk = strtok(rhs, " \t\n"); 
+            while (tk) { int si = get_sym_index(tk); 
+prods[prod_count].rhs[prods[prod_count].rhs_len++] = si; tk = strtok(NULL, " \t\n"); } 
+            prod_count++; 
+        } 
+        fclose(f); 
+    } 
+    // add augmented production S' -> S (production 0) 
+    // Create new symbol S' 
+    char aug[10]; strcpy(aug, "S'"); 
+    int sp = get_sym_index(aug); 
+    // find original start as first prod's lhs 
+    if (prod_count > 0) start_symbol = prods[0].lhs; else start_symbol = get_sym_index("S"); 
+    // shift existing productions to make room for augmented production at index 0 
+    for (int i = prod_count; i > 0; --i) prods[i] = prods[i-1]; 
+    prods[0].lhs = sp; prods[0].rhs_len = 1; prods[0].rhs[0] = start_symbol; 
+    prod_count++; 
+ 
+    // mark terminals: symbols that never appear on LHS are terminals (except $) 
+    for (int i = 0; i < sym_count; ++i) is_terminal[i] = 1; 
+    for (int i = 0; i < prod_count; ++i) is_terminal[prods[i].lhs] = 0; 
+    // add $ terminal if not present 
+    int dollar = find_sym("$"); if (dollar == -1) { dollar = get_sym_index("$"); 
+is_terminal[dollar]=1; } 
+}
