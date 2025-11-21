@@ -176,3 +176,33 @@ void itemset_print(const ItemSet *I) {
         } 
         if (it.dot == p->rhs_len) printf(" . "); 
         printf(", la=%s\n", symbols[it.la]);
+            } 
+} 
+ 
+int goto_on(const ItemSet *I, int X, ItemSet *J) { 
+    J->n = 0; 
+    for (int i = 0; i < I->n; ++i) { 
+        Item it = I->items[i]; 
+        Prod *p = &prods[it.p]; 
+        if (it.dot < p->rhs_len && p->rhs[it.dot] == X) { 
+            Item nit = it; nit.dot++; 
+            // add nit 
+            if (!contains_item(J, nit)) J->items[J->n++] = nit; 
+        } 
+    } 
+    if (J->n == 0) return 0; 
+    closure(J); 
+    return 1; 
+} 
+ 
+// State merging: find state with same core 
+int find_core_equal_state(const ItemSet *s) { 
+    for (int i = 0; i < C_count; ++i) if (items_equal_core(&C[i], s)) return i; 
+    return -1; 
+} 
+ 
+// Build canonical LR(1) collection and then merge cores to LALR 
+ 
+void build_LR1() { 
+    // initial item: augmented production is prods[0] 
+    C_count = 0;
