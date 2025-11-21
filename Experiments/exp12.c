@@ -296,3 +296,63 @@ void build_parsing_table() {
                 // find LR1 goto from any LR1 state mapped to s 
                 // We'll search in original LR(1) collection for state k mapped to s, compute 
 goto_on(C[k], X) to J, find which LR1 state index matches J 
+   for (int k = 0; k < C_count; ++k) if (lr1_to_lalr[k] == s) { 
+                    ItemSet J; if (!goto_on(&C[k], X, &J)) continue; 
+                    // find index of J in C (exact match) 
+                    int idx = -1; 
+                    for (int m = 0; m < C_count; ++m) { 
+                        if (C[m].n == J.n) { 
+                            int all=1; 
+                            for (int aa=0; aa<J.n; ++aa) { 
+                                int f=0; 
+                                for (int bb=0; bb<C[m].n; ++bb) 
+                                    if (J.items[aa].p==C[m].items[bb].p && 
+J.items[aa].dot==C[m].items[bb].dot && J.items[aa].la==C[m].items[bb].la) { f=1; break; } 
+                                if (!f) { all=0; break; } 
+                            } 
+                            if (all) { idx = m; break; } 
+                        } 
+                    } 
+                    if (idx != -1) { 
+                        int t = lr1_to_lalr[idx]; 
+                        if (is_terminal[X]) { 
+                            ACTION[s][X].action = 1; ACTION[s][X].number = t; // shift 
+                        } else { 
+                            GOTO[s][X] = t; 
+                        } 
+                    } 
+                } 
+            } else { 
+                // item A->alpha . , for each lookahead la in items -> reduce 
+                if (it.p == 0) { 
+                    // augmented production S'->S . , la should be $ 
+   ACTION[s][it.la].action = 3; ACTION[s][it.la].number = 0; // accept 
+                } else { 
+                    for (int li = 0; li < I->n; ++li) { 
+                        // reduce for each lookahead where p and dot match 
+                    } 
+                    // Actually add reduce for this item's lookahead 
+                    ACTION[s][it.la].action = 2; ACTION[s][it.la].number = it.p; // reduce by 
+production p 
+                } 
+            } 
+        } 
+    } 
+} 
+ 
+// Helper to find symbol index by string safely 
+int find_sym(const char *s) { 
+    for (int i = 0; i < sym_count; ++i) if (strcmp(symbols[i], s) == 0) return i; 
+    return -1; 
+} 
+ 
+// Parse input tokens (space separated terminals) ending with $ 
+void parse_input() { 
+    printf("Enter input tokens separated by spaces (terminals). Use 'id' or token names. End 
+with $ or include it):\n"); 
+    char line[1024]; 
+    if (!fgets(line, sizeof(line), stdin)) return; 
+    char *tok = strtok(line, " \t\n"); 
+    int input[500]; int in_n = 0; 
+    while (tok) { 
+        int si = find_sym(tok);
