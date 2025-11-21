@@ -356,3 +356,63 @@ with $ or include it):\n");
     int input[500]; int in_n = 0; 
     while (tok) { 
         int si = find_sym(tok);
+            if (si == -1) { 
+            printf("Unknown token '%s'\n", tok); return; } 
+        input[in_n++] = si; 
+        tok = strtok(NULL, " \t\n"); 
+    } 
+    if (in_n == 0 || symbols[input[in_n-1]][0] != '$') { 
+        // add $ 
+        int si = find_sym("$"); if (si == -1) si = get_sym_index("$"); input[in_n++] = si; 
+    } 
+    // stacks 
+    int state_stack[1000]; int state_top = 0; state_stack[state_top++] = 0; 
+    int sym_stack[1000]; int sym_top = 0; sym_stack[sym_top++] = find_sym("$"); 
+    int ip = 0; 
+ 
+    while (1) { 
+        int s = state_stack[state_top-1]; 
+        int a = input[ip]; 
+        Action act = ACTION[s][a]; 
+        if (act.action == 1) { 
+            // shift 
+            state_stack[state_top++] = act.number; 
+            sym_stack[sym_top++] = a; 
+            ip++; 
+            printf("shift to state %d, token %s\n", act.number, symbols[a]); 
+        } else if (act.action == 2) { 
+            // reduce by prod r 
+            int r = act.number; Prod *p = &prods[r]; 
+            for (int i = 0; i < p->rhs_len; ++i) { state_top--; sym_top--; } 
+            int t = state_stack[state_top-1]; 
+            printf("reduce by %s ->", symbols[p->lhs]);
+                      for (int k = 0; k < p->rhs_len; ++k) printf(" %s", symbols[p->rhs[k]]); 
+            printf("\n"); 
+            int goto_s = GOTO[t][p->lhs]; 
+            if (goto_s == -1) { printf("Error: no goto for state %d and symbol %s\n", t, 
+symbols[p->lhs]); return; } 
+            state_stack[state_top++] = goto_s; 
+            sym_stack[sym_top++] = p->lhs; 
+        } else if (act.action == 3) { 
+            printf("Accept. Input parsed successfully.\n"); 
+            return; 
+        } else { 
+            printf("Error: no action for state %d and symbol %s\n", s, symbols[a]); 
+            return; 
+        } 
+    } 
+} 
+ 
+// Read grammar from file "grammar.txt", else use built-in example 
+void load_grammar() { 
+    FILE *f = fopen("grammar.txt", "r"); 
+    if (!f) { 
+        // built-in grammar: simple expression grammar 
+        // We'll create augmented production 0 later 
+        char *lines[] = { 
+            "E->E + T", 
+            "E->T", 
+            "T->T * F", 
+            "T->F", 
+            "F->( E )", 
+            "F->id",
