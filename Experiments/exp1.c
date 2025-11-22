@@ -57,3 +57,33 @@ void removeCommentsAndAnalyze(FILE *fp)
                  continue; 
     } 
    else 
+   { 
+                ungetc(next, fp); 
+    } 
+   } 
+ 
+        if (isalpha(ch) || ch == '_')  
+   { 
+            i = 0; 
+            buffer[i++] = ch; 
+            while (isalnum(ch = fgetc(fp)) || ch == '_')  
+    { 
+                if (i < MAX_ID_LENGTH) 
+                    buffer[i++] = ch; 
+    } 
+             buffer[i] = '\0'; 
+             ungetc(ch, fp); 
+             if (isKeyword(buffer)) 
+                printf("[Keyword]     %s\n", buffer); 
+             else 
+                printf("[Identifier]  %s\n", buffer); 
+   } 
+   else if (isdigit(ch))  
+   { 
+             i = 0; 
+             buffer[i++] = ch; 
+             while (isdigit(ch = fgetc(fp)))  
+    { 
+                 buffer[i++] = ch; 
+    } 
+             buffer[i] = '\0';
