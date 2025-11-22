@@ -505,3 +505,18 @@ is_terminal[i]?"T":"N");
     for (int t = 0; t < sym_count; ++t) if (is_terminal[t]) printf("\t%s", symbols[t]); 
     printf("\n"); 
     for (int s = 0; s < lalr_count; ++s) {
+            printf("state %d:\t", s); 
+        for (int t = 0; t < sym_count; ++t) if (is_terminal[t]) { 
+            Action a = ACTION[s][t]; 
+            if (a.action == 0) printf("  .  "); 
+            else if (a.action == 1) printf(" s%d ", a.number); 
+            else if (a.action == 2) printf(" r%d ", a.number); 
+            else if (a.action == 3) printf(" acc "); 
+            printf("\t"); 
+        } 
+        printf("\n"); 
+    } 
+ 
+    parse_input(); 
+    return 0; 
+} 
