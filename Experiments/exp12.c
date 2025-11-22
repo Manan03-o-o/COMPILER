@@ -476,3 +476,32 @@ prods[prod_count].rhs[prods[prod_count].rhs_len++] = si; tk = strtok(NULL, " \t\
     int dollar = find_sym("$"); if (dollar == -1) { dollar = get_sym_index("$"); 
 is_terminal[dollar]=1; } 
 }
+int main() { 
+    load_grammar(); 
+    printf("Symbols (%d):\n", sym_count); 
+    for (int i = 0; i < sym_count; ++i) printf("  %d: %s (%s)\n", i, symbols[i], 
+is_terminal[i]?"T":"N"); 
+    printf("Productions (%d):\n", prod_count); 
+    for (int i = 0; i < prod_count; ++i) { 
+        printf("  %d: %s ->", i, symbols[prods[i].lhs]); 
+        for (int j = 0; j < prods[i].rhs_len; ++j) printf(" %s", symbols[prods[i].rhs[j]]); 
+        printf("\n"); 
+    } 
+    compute_first(); 
+    printf("Computed FIRST sets.\n"); 
+    build_LR1(); 
+    printf("Built LR(1) collection with %d states.\n", C_count); 
+    build_LALR_from_LR1(); 
+    printf("Merged to %d LALR states.\n", lalr_count); 
+    build_parsing_table(); 
+    printf("Parsing table built.\n"); 
+    // optionally print states 
+    for (int i = 0; i < lalr_count; ++i) { 
+        printf("\nLALR State %d:\n", i); 
+        itemset_print(&lalr_states[i]); 
+    } 
+    // print ACTION table for terminals 
+    printf("\nACTION table (terminals and $):\n"); 
+    for (int t = 0; t < sym_count; ++t) if (is_terminal[t]) printf("\t%s", symbols[t]); 
+    printf("\n"); 
+    for (int s = 0; s < lalr_count; ++s) {
