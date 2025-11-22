@@ -87,3 +87,27 @@ void removeCommentsAndAnalyze(FILE *fp)
                  buffer[i++] = ch; 
     } 
              buffer[i] = '\0';
+             ungetc(ch, fp); 
+             printf("[Number]      %s\n", buffer); 
+   } 
+   else if (ispunct(ch))  
+   { 
+             printf("[Punctuator/Operator]  %c\n", ch); 
+   } 
+   } 
+ }  
+ 
+int main()  
+ { 
+      FILE *fp = fopen("input.c", "r"); 
+      if (fp == NULL)  
+ { 
+        printf("Could not open file.\n"); 
+        return 1; 
+ } 
+ 
+    printf("Lexical Analysis Output:\n\n"); 
+    removeCommentsAndAnalyze(fp); 
+    fclose(fp); 
+    return 0; 
+ }
