@@ -90,3 +90,11 @@ int main() {
  
     if (input[i] == '\0') { 
         printf("--- Parsing Completed Successfully ---\n");
+             printf("Input accepted\n"); 
+    } else { 
+        printf("Unexpected character '%c' at end\n", input[i]); 
+        printf("Input rejected\n"); 
+    } 
+ 
+    return 0; 
+}
