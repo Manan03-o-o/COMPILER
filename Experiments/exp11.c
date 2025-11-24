@@ -30,3 +30,33 @@ void match(char expected) {
 // E -> T E' 
 void E() { 
     printf("Applying Rule: E -> T E'\n");
+       T(); 
+    Eprime(); 
+} 
+ 
+// E' -> + T E' | e 
+void Eprime() { 
+    if (input[i] == '+') { 
+        printf("Applying Rule: E' -> + T E'\n"); 
+        match('+'); 
+        T(); 
+        Eprime(); 
+    } else { 
+        printf("Applying Rule: E' -> e\n"); 
+    } 
+} 
+ 
+// T -> F T' 
+void T() { 
+    printf("Applying Rule: T -> F T'\n"); 
+    F(); 
+    Tprime(); 
+} 
+ 
+// T' -> * F T' | e 
+void Tprime() { 
+    if (input[i] == '*') { 
+        printf("Applying Rule: T' -> * F T'\n"); 
+        match('*'); 
+        F(); 
+        Tprime();
