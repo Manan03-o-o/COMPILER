@@ -29,3 +29,19 @@ int main() {
 
     return 0;
 }
+    
+            F(); 
+            Tprime(); 
+        } else { 
+            printf("Applying Rule: T' -> e\n"); 
+        } 
+    }
+        match('*');
+        F();
+        Tprime();
+    } else { 
+        printf("Applying Rule: T' -> e\n"); 
+    } 
+} 
+ 
+// F -> ( E ) | id
