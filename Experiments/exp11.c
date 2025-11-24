@@ -60,3 +60,33 @@ void Tprime() {
         match('*'); 
         F(); 
         Tprime();
+           } else { 
+        printf("Applying Rule: T' -> e\n"); 
+    } 
+} 
+ 
+// F -> ( E ) | id 
+void F() { 
+    if (input[i] == '(') { 
+        printf("Applying Rule: F -> ( E )\n"); 
+        match('('); 
+        E(); 
+        match(')'); 
+    } else if (isalpha(input[i])) { 
+        printf("Applying Rule: F -> id\n"); 
+        printf("Matched identifier '%c'\n", input[i]); 
+        match(input[i]);  // Match the single-letter id 
+    } else { 
+        error(); 
+    } 
+} 
+ 
+int main() { 
+    printf("Enter an arithmetic expression (e.g., a+b*c): "); 
+    scanf("%s", input); 
+ 
+    printf("\n--- Parsing Started ---\n"); 
+    E(); 
+ 
+    if (input[i] == '\0') { 
+        printf("--- Parsing Completed Successfully ---\n");
