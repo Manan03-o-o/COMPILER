@@ -29,43 +29,5 @@ int main() {
 
     return 0;
 }
-    
-            F(); 
-            Tprime(); 
-        } else { 
-            printf("Applying Rule: T' -> e\n"); 
-        } 
-    }
-        match('*');
-        F();
-        Tprime();
-    } else { 
-        printf("Applying Rule: T' -> e\n"); 
-    } 
-} 
- 
-// F -> ( E ) | id 
-void F() {  
-    if (input[i] == '(') { 
-        printf("Applying Rule: F -> ( E )\n"); 
-        match('('); 
-        E(); 
-        match(')'); 
-    } else if (isalpha(input[i])) { 
-        printf("Applying Rule: F -> id\n"); 
-        printf("Matched id '%c'\n", input[i]); 
-        i++; 
-    } else { 
-        error(); 
-    } 
-}
-    printf("Enter an expression: ");
-    fgets(input, sizeof(input), stdin);
-    E();
-    if (input[i] == '\0' || input[i] == '\n') {
-        printf("Parsing completed successfully.\n");
-    } else {
-        printf("Unexpected symbol '%c' at position %d\n", input[i], i);
-    }
-    return 0;
-}
+
+
